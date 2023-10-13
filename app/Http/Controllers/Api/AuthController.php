@@ -12,10 +12,9 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    //create 3 functions to handle request for login, signup and logout
-    //Request classes are to handle validation of the data before requesting
-    public function signup(SignupRequest $request){
-        $data = $request->validata();
+    public function signup(SignupRequest $request)
+    {
+        $data = $request->validated();
         /** @var \App\Models\User $user */
         $user = User::create([
             'name' => $data['name'],
@@ -23,26 +22,28 @@ class AuthController extends Controller
             'password' => bcrypt($data['password']),
         ]);
 
-       $token = $user->createToken('main')->plainTextToken;
-
-       return response(compact('user', 'token')); 
+        $token = $user->createToken('main')->plainTextToken;
+        return response(compact('user', 'token'));
     }
 
-    public function login(LoginRequest $request){
-        $credentials = $request->validate();
-        if(!Auth::attempt($credentials)){
+    public function login(LoginRequest $request)
+    {
+        $credentials = $request->validated();
+        if (!Auth::attempt($credentials)) {
             return response([
                 'message' => 'Provided email or password is incorrect'
-            ]);
+            ], 422);
         }
 
-        /** @var User $user */
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $token = $user->createToken('main')->plainTextToken;
-        return response(compact('user', 'token')); 
+        return response(compact('user', 'token'));
     }
 
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
+        /** @var \App\Models\User $user */
         $user = $request->user();
         $user->currentAccessToken()->delete();
         return response('', 204);
