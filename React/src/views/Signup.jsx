@@ -1,13 +1,40 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import axiosClient from "../axios-client";
+import { useStateContext } from "../context/CreateProvider";
 
 export default function Signup() {
+  //can use states in place of ref but they keep saving with each change 
   const nameRef = useRef();
   const emailRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmationRef = useRef();
+
+  const { setUser, setToken} = useStateContext()
   
   const onSubmit = (ev) => {
     ev.preventDefault();
+    
+    //This is what is sent to through axios to the laravel server
+    const payload = {
+      name: nameRef.current.value,
+      email: emailRef.current.value,
+      password: passwordRef.current.value,
+      password_confirmation: passwordConfirmationRef.current.value,
+    }
+    //request to the server and assigns the response user and token to our context provider
+    //422 is a validation error
+    axiosClient.post('/signup', payload)
+    .then(({data}) => {
+      setUser(data.user)
+      setToken(data.token)
+    })
+    .catch(err => {
+      const response = err.response;
+      if(response && response.status === 422){
+        console.log(response.data.errors);  
+      }
+    })
   }
 
   return (
